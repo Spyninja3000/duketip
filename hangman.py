@@ -2,15 +2,17 @@ from __future__ import print_function
 import numpy
 
 name = raw_input("What is your name? ")
+#asks for your name
 
-if name.isalpha():
+if name.isalpha(): #checks if name is actually made of only letters
     print("Hello, " + name)
 else:
     print("That's not a name!")
 
 play = raw_input("Would you like to play Hangman? ")
+#makes sure the player wants to play
 
-if play == "Yes":
+if play == "Yes": #Lets them play if 'Yes' or a similar input is given
     print("Okay, let's go!")
 elif play == "Sure":
     print("Okay, let's go!")
@@ -23,13 +25,14 @@ elif play == "Why Not?":
 elif play == "yes":
     print("Okay, let's go!")
 elif play == "No":
-    print("Fine. Be like that. You're playing anyways.")
+    print("Fine. Be like that.")
+    exit() #exits because player doesn't want to play
 else:
-    print("IM TRIGGERED. Just go on and play.")
+    print("What? Just go on and play.") #gives an option for answers not defined
 
 
 
-def hangman_pic(lives):
+def hangman_pic(lives): #sets the number of lives before you die and communicates this to the player
     if lives == 6:
         print("The noose is tightly set around your neck")
     if lives == 5:
@@ -42,59 +45,61 @@ def hangman_pic(lives):
         print("You have 2 lives now. Rope's getting thin...")
     if lives == 1:
         print("You have freaking 1 live left! You're about to die!")
-    elif lives == 0:
+    elif lives == 0: #exits the player after they die
         print("You're dead as a doornail")
         exit()
 
 # word : The correct word to be guessed
 # correctLetters : List of correctly guessed letters
 
-def printBlanks(word, correctLetters):
-    solved = True
+def printBlanks(word, correctLetters): #prints either a space or a guessed letter
+    solved = True #assume that player has won until this is disproved
     for l in word:
-        l = l.lower()
+        l = l.lower() #ensures that the l is lowercase
         if l in correctLetters:
             print(l + " ", end='')
         else:
             print("_ ", end='')
-            solved = False
+            solved = False #disproves the fact that the player has won
     print('')
     return solved
 
-word_list = ['pencil']
+word_list = ['pencil'] #the word(s) that are the answers
 
-correctLetters = []
+correctLetters = [] #empty space for guessed letters to be stored
 
-lives = 6
+lives = 6 #start off with 6 lives
 
 word = 'pencil'
 
-while True:
-    hangman_pic(lives)
-    solved = printBlanks(word, correctLetters)
+while True: #start of the mega-loop
+    hangman_pic(lives) #prints the lives count
+    solved = printBlanks(word, correctLetters) #sets solved as the player's correct guesses
 
-    if solved == True:
+    if solved == True: #tells the player they win if they won
         print('You win!')
         break
 
     guesses = 0
-    letters_used = ""
+    letters_used = "" #empty variable used to store all used letters
 
-    guess = raw_input("Guess a letter ")
+    guess = raw_input("Guess a letter ") #asks for a letter
 
-    if guess in word and guess not in letters_used:
-        print ("Your guess was correct")
-        letters_used += guess
-        correctLetters.append(guess)
-        print("Letter used: " + letters_used)
-    elif guess not in word and guess not in letters_used:
+    if guess in word and guess not in letters_used: #correct answer
+        print ("Your guess was correct") #tells player they're correct
+        letters_used += guess #adds letter guessed to an empty variable
+        correctLetters.append(guess) #adds letter guessed to correctLetters
+        print("Letter used: " + letters_used) #prints letter used
+    elif guess not in word and guess not in letters_used: #incorrect answer
         guesses += 1
-        print("You were wrong")
-        letters_used += guess
-        lives -= 1
+        print("You were wrong") #tells player they were wrong
+        letters_used += guess #adds letter guessed to an empty variable
+        lives -= 1 #takes away a life for the incorrect answer
         hangman_pic(lives)
         print("Letter used: " + letters_used)
+    elif guess not in word and guess in letters_used: #makes sure there's no penalty for repeated answers
+        print("You've already guessed this letter!")
     else:
-        print("Wrong")
+        print("Wrong")#gives the player a penalty if they somehow broke my system
         lives-=1
 
