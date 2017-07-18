@@ -24,3 +24,5 @@ print(done) #returns the y of the x
 #plt.plot(x2, yfit, label = "Fit")
 #plt.show()
 #plt.savefig("example.png")
+
+
