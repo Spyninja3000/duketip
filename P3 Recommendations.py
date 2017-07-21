@@ -7,26 +7,35 @@ import numpy as np
 ########################################################
 
 def findSimilar(iLikeNp, userLikes):
-    # Create an And similarity
-    similarityAnd = 0  # TODO replace 0 with the correct code
-    # Create a per user sum (this is the numerator of the jaccard index)
-    similarityAndSum = 0  # TODO replace 0 with the correct code
+    #Create an And similarity
+    similarityAnd = iLikeNp * userLikes  #replace 0 with the correct code
+    #Create a per user sum (this is the numerator of the jaccard index)
+    similarityAndSum = similarityAnd.sum(axis=1)  #replace 0 with the correct code
     # Create an Or similarity
-    userSimilarityOr = 0  # TODO replace 0 with the correct code
+    userSimilarityOr = iLikeNp + userLikes  #replace 0 with the correct code
     # Create a per user union sum (this is the denominator of the jaccard index)
-    similarityOrSum = 0  # TODO replace 0 with the correct code
+    similarityOrSum = userSimilarityOr.sum(axis=1) - similarityAndSum  #replace 0 with the correct code
 
     # Calculate the similarity
-    userSimilarity = 0  # TODO replace 0 with the correct code to calculate the Jaccard Index for each user
+    userSimilarity = similarityAndSum / similarityOrSum  #replace 0 with the correct code to calculate the Jaccard Index for each user
 
     # Make the most similar user has a new like that the previous user did not have
     # I used a while loop.
     # You can "get rid" of a user that is most similar, but doesn't have any new likes
     # by setting the userSimilarity for them to 0
     # When you get the index, save it in the variable maxIndex
-    # TODO Write the loop
+    #Write the loop
 
-    # TODO Print the max similarity number (most times this is something like 0.17
+    while True:
+        maxIndex = userSimilarity.argmax()
+        newLikes = userLikes[maxIndex] - iLikeNp
+        if 1 in newLikes:
+            break
+        else:
+            userSimilarity[maxIndex] = 0
+    #id of most similar user from User Similarity
+    # Print the max similarity number (most times this is something like 0.17
+    print(userSimilarity[maxIndex])
 
     # Return the index of the user which is the best match
     return maxIndex
@@ -35,31 +44,39 @@ def findSimilar(iLikeNp, userLikes):
 def printMovie(id):
     # Print the id of the movie and the name.  This should look something like
     # "    - 430: Duck Soup (1933)" if the id is 430 and the name is Duck Soup (1933)
-    print(0)  # TODO replace 0 with the correct code
+    print("-", id, ":", movieDict[id])#replace 0 with the correct code
 
 
 def processLikes(iLike):
     print("\n\nSince you like:")
 
-    # TODO Print the name of each movie the user reported liking
+    #Print the name of each movie the user reported liking
     # Hint: Use a for loop and the printMovie function.
+    for id in iLike:
+        printMovie(id)
 
     # Convert iLike into an array of 0's and 1's which matches the array for other users
     # It should have one column for each movie (just like the userLikes array)
     # Start with all zeros, then fill in a 1 for each movie the user likes
-    iLikeNp = 0  # TODO replace 0 with the code to make the array of zeros
-    # TODO You'll need a few more lines of code to fill in the 1's as needed
-
+    iLikeNp = np.zeros(maxMovie)  #replace 0 with the code to make the array of zeros
+    #You'll need a few more lines of code to fill in the 1's as needed
+    for id in iLike:
+        iLikeNp[id] = 1
     # Find the most similar user
-    user = 0  # TODO replace 0 with the correct code (hint: use one of your functions)
+    user = findSimilar(iLikeNp, userLikes)  #replace 0 with the correct code (hint: use one of your functions)
     print("\nYou might like: ")
     # Find the indexes of the values that are ones
     # https://stackoverflow.com/a/17568803/3854385 (Note: You don't want it to be a list, but you do want to flatten it.)
-    recLikes = 0  # TODO replace 0 with the needed code
+
+    recLikes = np.argwhere(userLikes[user, :] == 1)#replace 0 with the needed code
+    recLikes = recLikes.flatten()
 
     # For each item the similar user likes that the person didn't already say they liked
     # print the movie name using printMovie (you'll also need a for loop and an if statement)
-    # TODO Print the movies
+    # Print the movies
+    for id in recLikes:
+        if not id in iLike:
+            printMovie(id)
 
 
 ########################################################
@@ -79,14 +96,15 @@ movieNames = np.loadtxt('./ml-100k/u.item', dtype={'names': ('id', 'name'), 'for
 movieDict = dict(zip(movieNames['id'], movieNames['name']))  # TODO replace 0 with the code to make the dict
 
 # Load the movie Data (u.data) with just columns 0, 1, and 2 (userID, movieID, rating) all are np.int
-movieData = np.loadtxt('./ml-100k/u.item', dtype={'names': ('userID', 'movieID', 'rating'), 'formats': (np.int, np.int, np.int)},
-                       delimiter='\t', usecols=(0, 1, 2))  # TODO replace 0 with the correct cod eto load the movie data
+movieData = np.loadtxt('./ml-100k/u.data', dtype={'names': ('userID', 'movieID', 'rating'), 'formats': (np.int, np.int, np.int)},
+                       delimiter='\t', usecols=(0, 1, 2))  # TODO replace 0 with the correct code to load the movie data
 
-print(movieData)
-print(movieNames)
-print(movieDict)
+#print(movieData)
+#print(movieNames)
+#print(movieDict)
 
-exit(0)  # Delete this after we finish phase 1, for now just get the data loaded
+
+# Delete this after we finish phase 1, for now just get the data loaded
 
 ########################################################
 # Begin Phase 2
@@ -96,39 +114,70 @@ exit(0)  # Delete this after we finish phase 1, for now just get the data loaded
 # This is non-ideal, pandas, scipy, or graphlib should be used here
 
 # Create a dictionary to hold our temporary ratings
-movieRatingTemp = 0  # TODO replace 0 with code for an empty dictionary
+movieRatingTemp = {}  #replace 0 with code for an empty dictionary
 
-# TODO For every row in the movie data, add the rating to a list in the dictionary entry
+for row in movieData:
+    if row['movieID'] not in movieRatingTemp:
+        movieRatingTemp[row['movieID']] = [row['rating']]
+    else:
+        movieRatingTemp[row['movieID']].append(row['rating'])
+
+
+# For every row in the movie data, add the rating to a list in the dictionary entry
 # for that movies ID (don't forget to initialize the dictionary entry)
 
 
 # Create an empty dictionary for movieRating and movieRatingCount
-movieRating = 0  # TODO replace 0 with code for an empty dictionary
-movieRatingCount = 0  # TODO replace 0 with code for an empty dictionary
+movieRating = {}  # replace 0 with code for an empty dictionary
+movieRatingCount = {} # replace 0 with code for an empty dictionary
 
 # TODO Using numpy place the average rating for each movie in movieRating and the total number of ratings in movieRatingCount
 # Note: You will need a for loop to get each dictionary key
-
+for key in movieRatingTemp:
+    movieRating[key] = np.mean(movieRatingTemp[key])
+    movieRatingCount[key] = len(movieRatingTemp[key])
 
 # Get sorting ratings
 # https://www.saltycrane.com/blog/2007/09/how-to-sort-python-dictionary-by-keys/
+print("")
 movieRatingS = sorted(movieRating.iteritems(), key=lambda (k, v): (v, k), reverse=True)
 
 # Top 10 Movies
 print("Top Ten Movies:")
 # TODO Print the top 10 movies
+for i in range(0, 10):
+    movID = movieRatingS[i][0]
+    movName = movieDict[movID]
+    count = movieRatingCount[movID]
+    rating = movieRatingS[i][1]
+    print(i+1, movName, "ID:", movID, "Number of Reviews:",count, "Rating:", rating)
+
+
+
 # It should print the number, title, id, rating and count of reviews for each movie
 # ie 2. Someone Else's America (1995) (ID: 1599) Rating: 5.0 Count: 1
-
 
 # Top 10 Movies with at least 100 ratings
 print("\n\nTop Ten movies with at least 100 ratings:")
 # TODO It should print the same thing, but this time all the movies should have over 100 ratings
+
+i = 0
+printed = 0
+while printed < 10:
+    movID2 = movieRatingS[i][0]
+    movName2 = movieDict[movID2]
+    count2 = movieRatingCount[movID2]
+    rating2 = movieRatingS[i][1]
+    if count2 > 100:
+        print(i+1, movName2, "ID:", movID2, "Number of Reviews:",count2, "Rating:", rating2)
+        printed += 1
+        i += 1
+    else:
+        i += 1
 # The number should be the movie's absolute rank
 # ie (16. Close Shave, A (1995) (ID: 408) Rating: 4.49 Count: 112)
 # Number 16 is first in this list because it's the first movie with over 100 ratings
-
-exit(0)  # Remove this line after we finish phase 2
+#  Remove this line after we finish phase 2
 
 ########################################################
 # Begin Phase 3
@@ -139,15 +188,19 @@ exit(0)  # Remove this line after we finish phase 2
 # Create a numpy ndarray of zeros with demensions of max user id + 1 and max movie + 1 (because we'll use them as 1 indexed not zero indexed)
 
 # Find the max movie ID + 1
-maxMovie = 0  # TODO replace 0 with the correct code
+maxMovie = movieData['movieID'].max(axis=0) + 1  #replace 0 with the correct code
 
 # Find the max user Id + 1
-maxUser = 0  # TODO replace 0 with the correct code
+maxUser = movieData['userID'].max(axis=0) + 1 #replace 0 with the correct code
 
 # Create an array of 0s which will fill in with 1s when a user likes a movie
 userLikes = np.zeros((maxUser, maxMovie))
 
-# TODO Go through all the rows of the movie data.
+#Go through all the rows of the movie data.
+for row in movieData:
+    if row['rating'] >= 4: # want to compare the rating, not the userID
+        userLikes[row['userID'], row['movieID']] = 1 # I'll check with this after break
+
 # If the user rated a movie as 4 or 5 set userLikes to 1 for that user and movie
 # Note: You'll need a for loop and an if statement
 
@@ -158,7 +211,7 @@ userLikes = np.zeros((maxUser, maxMovie))
 ########################################################
 
 # First sample user
-# User Similiarity: 0.133333333333
+# User Similarity: 0.133333333333
 iLike = [655, 315, 66, 96, 194, 172]
 processLikes(iLike)
 
@@ -174,7 +227,23 @@ processLikes(iLike)
 iLike = [79, 96, 98, 168, 173, 176, 194, 318, 357, 427, 603, 1]
 processLikes(iLike)
 
-# TODO If your code completes the above recommendations properly, you're ready for the last part,
+iLike = []
+
+while True:
+    done = raw_input("Are you finished entering movies? Please put in either Y or N: ")
+    if done == "N":
+        ILikey = raw_input("Which movies do you like? Please input the id. ")
+        try:
+            ILikey = float(ILikey)
+        except ValueError:
+            exit("Always in a Hurry? Why are you RUSSIAN? You need to PUTIN some real numbers!")
+        iLike.append(int(ILikey))
+    elif done == "Y":
+        break
+
+processLikes(iLike)
+
+#If your code completes the above recommendations properly, you're ready for the last part,
 # allow the user to select any number of movies that they like and then give them recommendations.
 # Note: I recommend having them select movies by ID since the titles are really long.
 # You can just assume they have a list of movies somewhere so they already know what numbers to type in.
